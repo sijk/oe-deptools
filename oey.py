@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import sys, getopt
+import sys, getopt, re
 
 # keyed by package-name, contains the list of package dependencies
 pn = {}
@@ -188,6 +188,15 @@ def list_reverse_deps_flat(package, max_depth):
     print '\n',
 
 
+def package_regex(package):
+    package = re.compile(package)
+    packages = set()
+    for pkg in pn:
+        if package.search(pkg):
+            packages.add(pkg)
+    return packages
+
+
 def usage():
     print '\nUsage: %s [options] [package]\n' % (sys.argv[0])
     print 'Displays OE build dependencies for a given package or recipe.'
@@ -266,16 +275,17 @@ if __name__ == '__main__':
     build_reverse_dependencies()
 
     if len(args) > 0:
-        if reverse:
-            if flat:
-                list_reverse_deps_flat(args[0], depth)
+        for pkg in package_regex(args[0]):
+            if reverse:
+                if flat:
+                    list_reverse_deps_flat(pkg, depth)
+                else:
+                    list_reverse_deps(pkg, depth)
             else:
-                list_reverse_deps(args[0], depth)
-        else:
-            if flat:
-                list_deps_flat(args[0], depth)
-            else:
-                list_deps(args[0], depth)
+                if flat:
+                    list_deps_flat(pkg, depth)
+                else:
+                    list_deps(pkg, depth)
 
     else:
         list_packages()
