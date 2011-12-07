@@ -13,11 +13,11 @@ show_verbose_messages = False
 
 indent_str = '\t'
 
-def parse_pn_depends():
+def parse_pn_depends(depends_file):
 	try:
-		fh = open('pn-depends.dot')
+		fh = open(depends_file)
 	except:
-		print 'File pn-depends.dot not found'
+		print 'File %s not found' % depends_file
 		print 'Generate the file with bitbake -g <recipe>'
 		sys.exit()	
 
@@ -203,7 +203,10 @@ def usage():
 	print '\t\tMaximum depth to follow dependencies, default is infinite'
 	print '-s, --show-parent-deps'
 	print '\t\tShow child package dependencies that are already listed'
-	print '\t\tas direct parent dependencies.\n'
+	print '\t\tas direct parent dependencies.'
+	print '-f <file>, --file=<file>'
+	print '\t\tUse the dependencies from a different file. Useful for comparing'
+	print '\t\tthe pn-depends.dot files from multiple `bitbake -g` runs.\n'
 	print "Provide a package name from the generated pn-depends.dot file."
 	print 'Run the program without a package name to get a list of'
 	print 'available package names.\n'
@@ -212,8 +215,9 @@ def usage():
 if __name__ == '__main__':
 
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], 'hvrtd:s', 
-						['help', 'verbose', 'reverse-deps', 'tree', 'depth=', 'show-parent-deps'])
+		opts, args = getopt.getopt(sys.argv[1:], 'hvrtd:sf:',
+						['help', 'verbose', 'reverse-deps', 'tree', 'depth=',
+						 'show-parent-deps', 'file='])
 
 	except getopt.GetoptError, err:
 		print str(err)
@@ -224,6 +228,7 @@ if __name__ == '__main__':
 	depth = 1000
 	reverse = False
 	flat = True
+	depends_file = 'pn-depends.dot'
 
 	for o, a in opts:
 		if o in ('-h', '--help'):
@@ -250,11 +255,14 @@ if __name__ == '__main__':
 				usage()
 				sys.exit(1)
 
+		elif o in ('-f', '--file'):
+			depends_file = a
+
 		else:
 			assert False, 'unhandled option'
 
 
-	parse_pn_depends()
+	parse_pn_depends(depends_file)
 	build_reverse_dependencies()
 
 	if len(args) > 0:
