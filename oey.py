@@ -202,7 +202,9 @@ def package_glob(package):
         for rdep in rdeps:
             packages.add(rdep)
 
-    package = re.compile(package.replace('.', '\.').replace('?', '.').replace('*', '.*'))
+    package = re.compile(package.replace('.', '\.')\
+                                .replace('?', '.')\
+                                .replace('*', '.*'))
     matches = []
     for pkg in packages:
         match = package.match(pkg)
@@ -232,6 +234,7 @@ def usage():
     print '\t\tUse the dependencies from a different file. Useful for comparing'
     print '\t\tthe pn-depends.dot files from multiple `bitbake -g` runs.\n'
     print "Provide a package name from the generated pn-depends.dot file."
+    print "You can use wildcards: ? = any character, * = any string."
     print 'Run the program without a package name to get a list of'
     print 'available package names.\n'
 
