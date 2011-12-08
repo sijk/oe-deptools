@@ -188,13 +188,28 @@ def list_reverse_deps_flat(package, max_depth):
     print '\n',
 
 
-def package_regex(package):
-    package = re.compile(package)
+def package_glob(package):
+    if '?' not in package and '*' not in package:
+        return [package]
+
     packages = set()
-    for pkg in pn:
-        if package.search(pkg):
-            packages.add(pkg)
-    return packages
+    for pkg, deps in pn.iteritems():
+        packages.add(pkg)
+        for dep in deps:
+            packages.add(dep)
+    for pkg, rdeps in rev_pn.iteritems():
+        packages.add(pkg)
+        for rdep in rdeps:
+            packages.add(rdep)
+
+    package = re.compile(package.replace('.', '\.').replace('?', '.').replace('*', '.*'))
+    matches = []
+    for pkg in packages:
+        match = package.match(pkg)
+        if match and match.group(0) == pkg:
+            matches.append(pkg)
+
+    return matches
 
 
 def usage():
@@ -275,18 +290,26 @@ if __name__ == '__main__':
     build_reverse_dependencies()
 
     if len(args) > 0:
-        for pkg in package_regex(args[0]):
-            if reverse:
-                if flat:
-                    list_reverse_deps_flat(pkg, depth)
-                else:
-                    list_reverse_deps(pkg, depth)
-            else:
-                if flat:
-                    list_deps_flat(pkg, depth)
-                else:
-                    list_deps(pkg, depth)
-
+        pkgs = package_glob(args[0])
     else:
         list_packages()
+        sys.exit()
+
+    if len(pkgs) == 1:
+        if reverse:
+            if flat:
+                list_reverse_deps_flat(pkgs[0], depth)
+            else:
+                list_reverse_deps(pkgs[0], depth)
+        else:
+            if flat:
+                list_deps_flat(pkgs[0], depth)
+            else:
+                list_deps(pkgs[0], depth)
+    elif len(pkgs) > 1:
+        for pkg in sorted(pkgs):
+            print pkg
+        print
+    else:
+        print 'No package found matching [', args[0], ']'
 
